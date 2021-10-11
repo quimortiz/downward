@@ -15,7 +15,6 @@ class StateID {
     friend class PerStateArray;
     friend class PerStateBitset;
 
-    int value;
     explicit StateID(int value_)
         : value(value_) {
     }
@@ -23,6 +22,7 @@ class StateID {
     // No implementation to prevent default construction
     StateID();
 public:
+    int value;
     ~StateID() {
     }
 

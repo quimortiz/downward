@@ -14,8 +14,8 @@ class TaskProxy;
 
 class SearchNode {
     State state;
-    SearchNodeInfo &info;
 public:
+    SearchNodeInfo &info;
     SearchNode(const State &state, SearchNodeInfo &info);
 
     const State &get_state() const;

@@ -44,6 +44,7 @@ static int parse_int_arg(const string &name, const string &value) {
 static shared_ptr<SearchEngine> parse_cmd_line_aux(
     const vector<string> &args, options::Registry &registry, bool dry_run) {
     string plan_filename = "sas_plan";
+    string state_filename = "sas_state";
     int num_previously_generated_plans = 0;
     bool is_part_of_anytime_portfolio = false;
     options::Predefinitions predefinitions;
@@ -97,7 +98,14 @@ static shared_ptr<SearchEngine> parse_cmd_line_aux(
                 throw ArgError("missing argument after --internal-plan-file");
             ++i;
             plan_filename = args[i];
-        } else if (arg == "--internal-previous-portfolio-plans") {
+        } 
+         else if (arg == "--internal-state-file") {
+            if (is_last)
+                throw ArgError("missing argument after --internal-state-file");
+            ++i;
+            state_filename = args[i];
+        }
+        else if (arg == "--internal-previous-portfolio-plans") {
             if (is_last)
                 throw ArgError("missing argument after --internal-previous-portfolio-plans");
             ++i;
@@ -121,6 +129,7 @@ static shared_ptr<SearchEngine> parse_cmd_line_aux(
     if (engine) {
         PlanManager &plan_manager = engine->get_plan_manager();
         plan_manager.set_plan_filename(plan_filename);
+        plan_manager.set_state_filename(state_filename);
         plan_manager.set_num_previously_generated_plans(num_previously_generated_plans);
         plan_manager.set_is_part_of_anytime_portfolio(is_part_of_anytime_portfolio);
     }

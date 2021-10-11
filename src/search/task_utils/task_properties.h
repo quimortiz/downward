@@ -78,6 +78,7 @@ std::vector<FactPair> get_fact_pairs(const FactProxyCollection &facts) {
 
 extern void print_variable_statistics(const TaskProxy &task_proxy);
 extern void dump_pddl(const State &state);
+extern void dump_pddl_to(const State &state, std::ostream& os);
 extern void dump_fdr(const State &state);
 extern void dump_goals(const GoalsProxy &goals);
 extern void dump_task(const TaskProxy &task_proxy);
