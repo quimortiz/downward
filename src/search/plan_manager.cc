@@ -93,7 +93,7 @@ void PlanManager::save_plan(
 
     for (OperatorID op_id : plan) {
       it++;
-      s = init.get_unregistered_successor( operators[op_id] );
+      s = s.get_unregistered_successor( operators[op_id] );
       std::cout << "s " << it << std::endl;
       outfile_state << "s " << it << std::endl;
       task_properties::dump_pddl(s);
