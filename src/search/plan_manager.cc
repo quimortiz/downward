@@ -78,11 +78,6 @@ void PlanManager::save_plan(
         utils::exit_with(utils::ExitCode::SEARCH_INPUT_ERROR);
     }
 
-    utils::g_log << " i am quim " << endl;
-    utils::g_log << " state init " << endl;
-    auto init =  task_proxy.get_initial_state() ;
-    auto s1 = init.get_unregistered_successor( operators[plan[0]] );
-    auto s2 = s1.get_unregistered_successor( operators[plan[1]] );
 
     auto s =  task_proxy.get_initial_state() ;
     int it = 0;
