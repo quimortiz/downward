@@ -1,0 +1,6 @@
+(start_move base base_ref free)
+(stop_move base free floor)
+(pick block1 block1_ref m_gripper base)
+(pick block2 block2_ref f_gripper f_base)
+(place block1 m_gripper block2 base)
+;

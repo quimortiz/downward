@@ -1,0 +1,11 @@
+Atom on(block1_ref, block1)
+Atom on(base_ref, base)
+
+Atom on(m_gripper, block1)
+Atom on(base_ref, base)
+
+Atom on(m_gripper, block1)
+Atom on(base_ref, base)
+
+Atom on(block2, block1)
+Atom on(base_ref, base)

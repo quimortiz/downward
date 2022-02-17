@@ -58,6 +58,22 @@ class TestMove(unittest.TestCase):
         out = run_cmd(cmd)
         assert out.returncode == 0
 
+    def testDfeas(self):
+        # cmd = "python3 modify_sas.py conflictA.txt sas.1.sas sas.1A.sas"
+        cmd = get_modify_cmd( "conflictD.txt" , "sas.1.sas", "sas.1D.sas")
+        run_cmd(cmd)
+        cmd = get_check_cmd( "sas.1D.sas" , "planDFeas1.txt")
+        out = run_cmd(cmd)
+        assert out.returncode == 0
+
+    def testDinfeas(self):
+        # cmd = "python3 modify_sas.py conflictA.txt sas.1.sas sas.1A.sas"
+        cmd = get_modify_cmd( "conflictD.txt" , "sas.1.sas", "sas.1D.sas")
+        run_cmd(cmd)
+        cmd = get_check_cmd( "sas.1D.sas" , "planDInfeas1.txt")
+        out = run_cmd(cmd)
+        assert out.returncode == 1
+
 
 
 
