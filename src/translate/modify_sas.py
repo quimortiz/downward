@@ -24,14 +24,25 @@ def init_state_match_all(values, info):
 # 1: var appears, with same value
 # 2: var apperas, with different value
 
+## NOTES:
+# For the first:
+# action a
+# partial states p
+# if p \subset pre(a) --> eff(a') = eff(a) \union b=1
+# if pre(a) \subset p --> eff(a') = eff(a) \union b=1 if p \minus pre(a) ; else set to zero
+# if 
+
+
+
 # if one of them is false: -> add state = 0
 # if one of them is true: add that inf0 = 1 , conditioned on the values of the others
 # if all are 0: do nothing
-def add_preconditions(var_id, inf0, sas_task, precond_for_one, allow_to_zero):
+def add_preconditions(var_id, inf0, sas_task, precond_for_one, allow_to_zero, is_first, is_same):
     # missing: if it does not change,
     # if previous is is one, then add conditional: if previous and the state,
     # then go to one.
 
+    print("is_same" , is_same )
     # (7,1)
     for op in sas_task.operators:
         flags = []
@@ -69,11 +80,18 @@ def add_preconditions(var_id, inf0, sas_task, precond_for_one, allow_to_zero):
             flags.append(flag)
 
         print(op.name, flags)
+
+        # # new
+        added_transtion_to_zero = False
+        added_transtion_to_one = False
+        # # added_something = False
+        #     # [(var_id , 1)]
+
         if 2 in flags:
             # case: at least one atom is 2 -> add 0
             if allow_to_zero:
+                added_transtion_to_zero = True
                 op.pre_post.append((var_id, -1, 0, []))
-
         elif 1 in flags:
             # at least one of the atoms is true, the others are zero
             # add the ones that are zero as precond
@@ -81,13 +99,25 @@ def add_preconditions(var_id, inf0, sas_task, precond_for_one, allow_to_zero):
             for i, var_value in zip(flags, inf0):
                 if i == 0:
                     pre_.append(var_value)
-            op.pre_post.append((var_id, -1, 1, pre_))
+            added_transtion_to_one = True
+            op.pre_post.append((var_id, 0, 1, pre_))
         else:
             # old: don't do anything
             # case all zeros: don't do anything
             # Maybe new: add the conditional? but it doesn't make much more
             # sense...
             pass
+        if ((not added_transtion_to_one) and (not added_transtion_to_zero) and allow_to_zero and not (is_first) ):
+           pp = [(var_id , 1)]
+            # op.pre_post.append((var_id, -1, 0, pp)) # always transition from 1 to zero
+            # op.pre_post.append((var_id, -1, 0, pp)) # always transition from 1 to zero
+           if (not is_same):
+                op.pre_post.append((var_id, -1, 0 , [])) # always transition from 1 to zero
+           else:
+                pre_ = precond_for_one[:]
+                op.pre_post.append((var_id, 0, 1 , pre_)) # always transition from 1 to zero
+                # add transition to zero of the previous one. how?
+
 
 
 def parse_file(filepath):
@@ -138,8 +168,9 @@ def parse_file(filepath):
                 state.append([predicate, l])
                 state_raw.append(atom_raw)
             line = file_object.readline()
-        data.append(state)
-        data_raw.append(state_raw)
+        if (len(state) and len(state_raw)):
+            data.append(state)
+            data_raw.append(state_raw)
     return data, data_raw
 
 
@@ -177,7 +208,7 @@ def test_3_mod_clean(sas_task, inf0, inf1, inf2, name):
         ["Atom infeas1-3(0)" + name, "Atom infeas1-3(1)" + name])
     sas_task.init.values.append(
         int(init_state_match_all(sas_task.init.values, inf0)))
-    add_preconditions(var_id, inf0, sas_task, [], True)
+    add_preconditions(var_id, inf0, sas_task, [], True, True,False)
 
     # add the second one
     var_id = len(sas_task.variables.ranges)
@@ -187,8 +218,9 @@ def test_3_mod_clean(sas_task, inf0, inf1, inf2, name):
         ["Atom infeas2-3(0)" + name, "Atom infeas2-3(1)" + name])
     sas_task.init.values.append(0)
 
+
     # inf1.append((var_id,1))
-    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], True)
+    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], True, False,inf0==inf1)
 
     # add the third one
     var_id = len(sas_task.variables.ranges)
@@ -200,7 +232,7 @@ def test_3_mod_clean(sas_task, inf0, inf1, inf2, name):
     sas_task.goal.pairs.append((var_id, 0))
 
     # inf1.append((var_id,1))
-    add_preconditions(var_id, inf2, sas_task, [(var_id - 1, 1)], False)
+    add_preconditions(var_id, inf2, sas_task, [(var_id - 1, 1)], False, False, inf2==inf1)
 
 
 def test_4_mod_clean(sas_task, inf0, inf1, inf2, inf3, name):
@@ -212,7 +244,7 @@ def test_4_mod_clean(sas_task, inf0, inf1, inf2, inf3, name):
         ["Atom infeas1-4(0)" + name, "Atom infeas1-4(1)" + name])
     sas_task.init.values.append(
         int(init_state_match_all(sas_task.init.values, inf0)))
-    add_preconditions(var_id, inf0, sas_task, [], True)
+    add_preconditions(var_id, inf0, sas_task, [], True, True,False)
 
     # add the second one
     var_id = len(sas_task.variables.ranges)
@@ -221,7 +253,7 @@ def test_4_mod_clean(sas_task, inf0, inf1, inf2, inf3, name):
     sas_task.variables.value_names.append(
         ["Atom infeas2-4(0)" + name, "Atom infeas2-4(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], True)
+    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], True, False,inf1==inf0)
 
     # add the third one
     var_id = len(sas_task.variables.ranges)
@@ -230,7 +262,8 @@ def test_4_mod_clean(sas_task, inf0, inf1, inf2, inf3, name):
     sas_task.variables.value_names.append(
         ["Atom infeas3-4(0)" + name, "Atom infeas3-4(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf2, sas_task, [(var_id - 1, 1)], True)
+    print( "check " , inf2 , inf1 , inf2==inf1)
+    add_preconditions(var_id, inf2, sas_task, [(var_id - 1, 1)], True,False, inf2==inf1)
 
     # add the fourth one
     var_id = len(sas_task.variables.ranges)
@@ -239,7 +272,7 @@ def test_4_mod_clean(sas_task, inf0, inf1, inf2, inf3, name):
     sas_task.variables.value_names.append(
         ["Atom infeas4-4(0)" + name, "Atom infeas4-4(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf3, sas_task, [(var_id - 1, 1)], False)
+    add_preconditions(var_id, inf3, sas_task, [(var_id - 1, 1)], False, False,inf3==inf2)
 
     # add goal
     sas_task.goal.pairs.append((var_id, 0))
@@ -254,7 +287,7 @@ def test_5_mod_clean(sas_task, inf0, inf1, inf2, inf3, inf4, name):
         ["Atom infeas1-5(0)" + name, "Atom infeas1-5(1)" + name])
     sas_task.init.values.append(
         int(init_state_match_all(sas_task.init.values, inf0)))
-    add_preconditions(var_id, inf0, sas_task, [], True)
+    add_preconditions(var_id, inf0, sas_task, [], True, True,False)
 
     # add the second one
     var_id = len(sas_task.variables.ranges)
@@ -263,7 +296,7 @@ def test_5_mod_clean(sas_task, inf0, inf1, inf2, inf3, inf4, name):
     sas_task.variables.value_names.append(
         ["Atom infeas2-5(0)" + name, "Atom infeas2-5(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], True)
+    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], True,False, inf1==inf0)
 
     # add the third one
     var_id = len(sas_task.variables.ranges)
@@ -272,7 +305,7 @@ def test_5_mod_clean(sas_task, inf0, inf1, inf2, inf3, inf4, name):
     sas_task.variables.value_names.append(
         ["Atom infeas3-5(0)" + name, "Atom infeas3-5(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf2, sas_task, [(var_id - 1, 1)], True)
+    add_preconditions(var_id, inf2, sas_task, [(var_id - 1, 1)], True,False, inf2==inf1)
 
     # add the fourth one
     var_id = len(sas_task.variables.ranges)
@@ -281,7 +314,7 @@ def test_5_mod_clean(sas_task, inf0, inf1, inf2, inf3, inf4, name):
     sas_task.variables.value_names.append(
         ["Atom infeas4-5(0)-5" + name, "Atom infeas4-5(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf3, sas_task, [(var_id - 1, 1)], True)
+    add_preconditions(var_id, inf3, sas_task, [(var_id - 1, 1)], True,False, inf3==inf2)
 
     # add 5th
     var_id = len(sas_task.variables.ranges)
@@ -290,7 +323,7 @@ def test_5_mod_clean(sas_task, inf0, inf1, inf2, inf3, inf4, name):
     sas_task.variables.value_names.append(
         ["Atom infeas5-5(0)" + name, "Atom infeas5-5(1)" + name])
     sas_task.init.values.append(0)
-    add_preconditions(var_id, inf4, sas_task, [(var_id - 1, 1)], False)
+    add_preconditions(var_id, inf4, sas_task, [(var_id - 1, 1)], False,False, inf4==inf3)
 
     # add goal
     sas_task.goal.pairs.append((var_id, 0))
@@ -313,7 +346,7 @@ def test_1_mod_clean(sas_task, inf0, name):
 
     var_id = num_vars_original
     # inf0 = [(4,0)]
-    add_preconditions(var_id, inf0, sas_task, [], False)
+    add_preconditions(var_id, inf0, sas_task, [], False , True, False)
 
 
 def test_2_mod_clean(sas_task, inf0, inf1, name):
@@ -327,7 +360,7 @@ def test_2_mod_clean(sas_task, inf0, inf1, name):
     sas_task.init.values.append(
         int(init_state_match_all(sas_task.init.values, inf0)))
 
-    add_preconditions(var_id, inf0, sas_task, [], True)
+    add_preconditions(var_id, inf0, sas_task, [], True, True, False)
 
     # add the second one
     var_id = len(sas_task.variables.ranges)
@@ -339,7 +372,7 @@ def test_2_mod_clean(sas_task, inf0, inf1, name):
     sas_task.goal.pairs.append((var_id, 0))
 
     # inf1.append((var_id,1))
-    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], False)
+    add_preconditions(var_id, inf1, sas_task, [(var_id - 1, 1)], False,False, inf0==inf1)
 
 
 def get_data_num(sas_task, data_raw):
@@ -401,9 +434,11 @@ if __name__ == "__main__":
         data, data_raw = parse_file(file)
         print("PYTHON: removing consecutive duplicates")
 
-        data = [v for i, v in enumerate(data) if i == 0 or v != data[i - 1]]
-        data_raw = [v for i, v in enumerate(
-            data_raw) if i == 0 or v != data_raw[i - 1]]
+        erase_duplicates = False
+        if (erase_duplicates):
+            data = [v for i, v in enumerate(data) if i == 0 or v != data[i - 1]]
+            data_raw = [v for i, v in enumerate(
+                data_raw) if i == 0 or v != data_raw[i - 1]]
 
         print("PYTHON: new data is")
         print("data {}".format(data))

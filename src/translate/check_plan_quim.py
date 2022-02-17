@@ -12,14 +12,12 @@ def help():
     print("usage SCRIPT  sas  plan")
 
 def apply_action( state: sas_tasks.SASInit  , action: sas_tasks.SASOperator):
-    print( "apply action")
-    print( action.dump())
+    print( "apply action"),
+    print( action.dump()) 
     print( "on state" )
     print( state.dump())
     new_state = deepcopy(state)
     for var, pre,post,cond in action.pre_post:
-        print("info")
-        print(var,pre,post,cond)
         effect = True
         for vvar,vval in cond:
             # example of cond [(9, 0), (10, 5)]
@@ -31,8 +29,6 @@ def apply_action( state: sas_tasks.SASInit  , action: sas_tasks.SASOperator):
                 assert new_state.values[var] == pre
             new_state.values[var] =  post
             # no conditional effects
-        print("after")
-        print(new_state.dump())
     print("resulting state is")
     print(new_state.dump())
     return new_state
@@ -84,7 +80,7 @@ def apply_list_actions( state: sas_tasks.SASInit, actions_str : List[str] ,
         if not check_action( state , action):
             raise ValueError("action {} is not applicable".format(a_str))
 
-        state = apply_action( state , action )
+        state = apply_action(state,action)
         states.append(state)
 
     return states
@@ -98,8 +94,8 @@ def apply_list_actions( state: sas_tasks.SASInit, actions_str : List[str] ,
 
 if __name__ == "__main__":
     # read
-    arg1 = sys.argv[1] # plan
-    arg2 = sys.argv[2] # sas file
+    arg1 = sys.argv[1] # sas file
+    arg2 = sys.argv[2] # plan
 
     # read sas
     sas_task = read_sas.read_sas_task(arg1)
@@ -161,13 +157,17 @@ if __name__ == "__main__":
 
     print("FIRST CHECK")
     out = apply_list_actions( sas_task.init , lines_clean , sas_task)
-    for i,s in enumerate(out):
-        print(i)
-        print(s.dump())
+    # for i,s in enumerate(out):
+    #     print(i)
+    #     print(s.dump())
 
     print( "checking if is goal")
     goal = is_goal( out[-1] , sas_task.goal)
     print(goal)
+    if (goal):
+        sys.exit(0)
+    else:
+        sys.exit(1)
 
 
 

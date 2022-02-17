@@ -1,0 +1,2 @@
+(pick block1 block1_ref f_gripper f_base)
+(place block1 f_gripper block2 f_base)
